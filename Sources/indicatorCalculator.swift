@@ -42,31 +42,48 @@ class IndicatorCalculator{
             let shortSma = tmpSum/Double(shortSmaLen)
             print("shortSma = \(shortSma)")
 
-            // Use RMA calculation
-            // When indicatorCandles.count == 0, then no smooting. 
-            // If there is a indicatorCandle, take last with indicatorCandles.last and use the RMA calcuation to smooth
-            // You can do this! I believe in you!
-            var sumGain = 0.0, sumLoss = 0.0
-            var countGain = 0, countLoss = 0
-            for rsiIndex in i-rsiLen+1...i{
-                let currCandle = candles[rsiIndex]
+
+            // New RSI calc...
+            var gainRma = 0.0
+            var lossRma = 0.0
+
+            let initStartIndex = i - (11*rsiLen) + 1
+            let initEndIndex = i - (10*rsiLen)
+            for initLossGainIndex in initStartIndex...initEndIndex{
+                let currCandle = candles[initLossGainIndex]
                 if currCandle.close > currCandle.open{
-                    sumGain += currCandle.close - currCandle.open
-                    countGain += 1
+                    gainRma += currCandle.close - currCandle.open
                 }
                 else{
-                    sumLoss += currCandle.open - currCandle.close
-                    countLoss += 1
+                    lossRma += currCandle.open - currCandle.close
                 }
             }
 
-            let avgGain = sumGain / Double(countGain > 0 ? countGain : 1)
-            let avgLoss = sumLoss / Double(countLoss > 0 ? countGain : 1)
+            // make init to SMA
+            gainRma /= Double(rsiLen)
+            lossRma /= Double(rsiLen)
 
-            let rs = avgGain / avgLoss
-            let rsi = 100 - ( 100 / (1+rs) )
+            //calculate RMA of rest
+            for lossGainRmaIndex in initEndIndex+1...i{
+                let currCandle = candles[lossGainRmaIndex]
+                if currCandle.close > currCandle.open{
+                    let change = currCandle.close - currCandle.open
+                    gainRma = ((gainRma * Double(rsiLen - 1)) + change) / Double(rsiLen)
+                    lossRma = (lossRma * Double(rsiLen - 1)) / Double(rsiLen)
+                }
+                else{
+                    let change = currCandle.open - currCandle.close
+                    gainRma = (gainRma * Double(rsiLen - 1)) / Double(rsiLen)
+                    lossRma = ((lossRma * Double(rsiLen - 1)) + change) / Double(rsiLen)
+                }
+            }
+            
+            let rs = gainRma / (lossRma > 0.0 ? lossRma : 1.0)
+            let rsi = lossRma == 0.0 ? 100.0 : gainRma == 0.0 ? 0.0 : 100 - (100 / (1 + rs))
             print("rsi = \(rsi)")
+
             print()
+
         }
         return []
     }
