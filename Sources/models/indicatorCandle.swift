@@ -6,8 +6,8 @@ struct IndicatorCandle: Decodable{
     let close: Double
     let volume: Double
     let turnover: Double
-    let emaTrend: Double
-    let emaLong: Double
-    let emaShort: Double
+    let smaTrend: Double
+    let smaLong: Double
+    let smaShort: Double
     let rsi: Double
 }

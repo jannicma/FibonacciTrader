@@ -13,18 +13,12 @@ class IndicatorCalculator{
         
         var indicatorCandles: [IndicatorCandle] = []
         for i in trendSmaLen-1...candles.count-1{
-            print(candles[i].close)
-            
-            var date = Date(timeIntervalSince1970: (Double(candles[i].time) / 1000.0))
-            print("date = \(date)")
-
             //loop for every indicator with i-lengthForIndicator until i
             var tmpSum = 0.0
             for trendSmaIndex in i-trendSmaLen+1...i{
                 tmpSum += candles[trendSmaIndex].close
             }
             let trendSma = tmpSum/Double(trendSmaLen)
-            print("trendSma = \(trendSma)")
 
 
             tmpSum = 0
@@ -32,7 +26,6 @@ class IndicatorCalculator{
                 tmpSum += candles[longSmaIndex].close
             }
             let longSma = tmpSum/Double(longSmaLen)
-            print("longSma = \(longSma)")
 
 
             tmpSum = 0
@@ -40,7 +33,6 @@ class IndicatorCalculator{
                 tmpSum += candles[shortSmaIndex].close
             }
             let shortSma = tmpSum/Double(shortSmaLen)
-            print("shortSma = \(shortSma)")
 
 
             // New RSI calc...
@@ -80,11 +72,24 @@ class IndicatorCalculator{
             
             let rs = gainRma / (lossRma > 0.0 ? lossRma : 1.0)
             let rsi = lossRma == 0.0 ? 100.0 : gainRma == 0.0 ? 0.0 : 100 - (100 / (1 + rs))
-            print("rsi = \(rsi)")
 
-            print()
+
+            //create indicatorCandle
+            let newIndicatorCandle = IndicatorCandle(time: candles[i].time, 
+                                                    open: candles[i].open, 
+                                                    high: candles[i].high, 
+                                                    low: candles[i].low, 
+                                                    close: candles[i].close, 
+                                                    volume: candles[i].volume, 
+                                                    turnover: candles[i].turnover, 
+                                                    smaTrend: trendSma, 
+                                                    smaLong: longSma, 
+                                                    smaShort: shortSma, 
+                                                    rsi: rsi)
+
+            indicatorCandles.append(newIndicatorCandle)
 
         }
-        return []
+        return indicatorCandles
     }
 }

@@ -6,7 +6,7 @@ import Foundation
 */
 actor BacktestActor{
 
-    func startBacktest() async{
+    public func startBacktest() async{
         let marketController = MarketController()
         let indicatorCalculator = IndicatorCalculator()
 
@@ -17,9 +17,105 @@ actor BacktestActor{
             return
         }
 
-        print("here")
-        let abc = indicatorCalculator.convertCandleToIndicatorCandle(candles: candles)
+        let indicatorCandles = indicatorCalculator.convertCandleToIndicatorCandle(candles: candles)
+        print("count of candles fetched: \(candles.count)")
+        print("count of indicator candles: \(indicatorCandles.count)")
+
+
     }
 
+
+    private func simulate(with candles: [IndicatorCandle]) -> [Int]{ // TODO return val will be an array of simulated trades
+        //Data for trade logic
+        var candleZero: IndicatorCandle?
+        var candleOne: IndicatorCandle?
+        
+        //Data for fibonacci detection
+        var lastCrossIndex: Int = 0
+
+        for i in 1...candles.count-1{
+            let candle = candles[i]
+            let prevCandle = candles[i-1]
+
+            let isBullTrend = candle.smaShort > candle.smaTrend && candle.smaLong > candle.smaTrend
+            let isBearTrend = candle.smaShort < candle.smaTrend && candle.smaLong < candle.smaTrend
+            let didCrossOver = candle.smaShort > candle.smaLong && prevCandle.smaShort < prevCandle.smaLong
+            let didCrossUnder = candle.smaShort < candle.smaLong && prevCandle.smaShort > prevCandle.smaLong
+
+            //Only bull case for now!! TODO: Modify for bear
+            if didCrossOver{
+                //find low between prevCross and now
+                if lastCrossIndex > 0{
+                    var low: Double = 999_999_999_999
+                    for lowFinderIndex in lastCrossIndex...i{
+                        if candles[lowFinderIndex].low < low{
+                            candleZero = candles[lowFinderIndex]
+                            low = candleZero!.low
+                        }
+                    }
+                }
+
+                lastCrossIndex = i
+            }
+            
+            if didCrossUnder{
+                if lastCrossIndex > 0{
+                    var high: Double = 0
+                    for highFinderIndex in lastCrossIndex...i{
+                        if candles[highFinderIndex].high > high{
+                            candleOne = candles[highFinderIndex]
+                            high = candleOne!.high
+                        }
+                    }
+                }
+
+                lastCrossIndex = i
+            }
+
+            if let candle0 = candleZero, let candle1 = candleOne{
+                // calculate fibonacci .618 and .75
+                let diff = candle1.high - candle0.low
+                let gpDiff = diff / 100 * 61.8
+                let kbDiff = diff / 100 * 75
+                let slProfitDiff = diff / 100 * 58
+                let tpOneDiff = diff / 100 * 38.2
+                
+                //TODO round values to 1 decimal
+
+                let gp = candle1.high - gpDiff
+                let kb = candle1.high - kbDiff
+                let slProfit = candle1.high - slProfitDiff
+                let tp1 = candle1.high - tpOneDiff
+
+                let limitDiff = (gp - kb) / 3
+
+                let limit2 = gp - limitDiff
+                let limit3 = kb + limitDiff
+
+                assert(limit2 - limit3 == limitDiff)
+
+                var newTrade = Trade(entry1: gp,
+                                    entry2: limit2,
+                                    entry3: limit3,
+                                    entry4: kb,
+                                    isEntry1: false, isEntry2: false, isEntry3: false, isEntry4: false,
+                                    stopLoss: candle0.low,
+                                    isStopLoss: false,
+                                    stopLossProfit: slProfit,
+                                    isStopLossProfit: false,
+                                    takeProfit1: tp1,
+                                    takeProfit2: candle1.high,
+                                    takeProfitCross: nil,
+                                    isTakeProfit: false, isTakeProfit2: false)
+
+
+                candleZero = nil
+                candleOne = nil
+            }
+
+        }
+
+        return []
+    }
 
 }
