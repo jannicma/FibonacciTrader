@@ -25,7 +25,7 @@ actor BacktestActor{
     }
 
 
-    private func simulate(with candles: [IndicatorCandle]) -> [Int]{ // TODO return val will be an array of simulated trades
+    private func simulate(with candles: [IndicatorCandle]) -> [Trade]{ 
         //Data for trade logic
         var candleZero: IndicatorCandle?
         var candleOne: IndicatorCandle?
@@ -98,7 +98,10 @@ actor BacktestActor{
                                     entry2: limit2,
                                     entry3: limit3,
                                     entry4: kb,
-                                    isEntry1: false, isEntry2: false, isEntry3: false, isEntry4: false,
+                                    isEntry1: false, 
+                                    isEntry2: false, 
+                                    isEntry3: false, 
+                                    isEntry4: false,
                                     stopLoss: candle0.low,
                                     isStopLoss: false,
                                     stopLossProfit: slProfit,
@@ -106,8 +109,11 @@ actor BacktestActor{
                                     takeProfit1: tp1,
                                     takeProfit2: candle1.high,
                                     takeProfitCross: nil,
-                                    isTakeProfit: false, isTakeProfit2: false)
+                                    isTakeProfit1: false, 
+                                    isTakeProfit2: false)
 
+
+                
 
                 candleZero = nil
                 candleOne = nil

@@ -13,7 +13,7 @@ struct Trade: Decodable{
     let isStopLoss: Bool            // is SL hit?
 
     let stopLossProfit: Double      // SL in profit after tp1 hit
-    let isStopLossProft: Bool       // SL in profit hit
+    let isStopLossProfit: Bool       // SL in profit hit
 
     let takeProfit1: Double         // TP 1 level (.382 probably)
     let takeProfit2: Double         // TP 2 level (higher high)
