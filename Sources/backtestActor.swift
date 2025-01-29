@@ -33,6 +33,10 @@ actor BacktestActor{
         //Data for fibonacci detection
         var lastCrossIndex: Int = 0
 
+
+        var openTrades: [Trade] = []
+        var closedTrades: [Trade] = []
+
         for i in 1...candles.count-1{
             let candle = candles[i]
             let prevCandle = candles[i-1]
@@ -78,7 +82,7 @@ actor BacktestActor{
                 let gpDiff = diff / 100 * 61.8
                 let kbDiff = diff / 100 * 75
                 let slProfitDiff = diff / 100 * 58
-                let tpOneDiff = diff / 100 * 38.2
+                let tpOneDiff = diff / 100 * 38.2 // TODO: Test with .236
                 
                 let gp = ((candle1.high - gpDiff) * 10).rounded() / 10
                 let kb = ((candle1.high - kbDiff) * 10).rounded() / 10
@@ -110,16 +114,68 @@ actor BacktestActor{
                                     isTakeProfit1: false, 
                                     isTakeProfit2: false)
 
+                openTrades.append(newTrade)
 
                 
 
                 candleZero = nil
                 candleOne = nil
             }
+            
+
+            if openTrades.count > 0{
+                let price = candle.close
+                for tradeIndex in 0..<openTrades.count{
+                    if openTrades[tradeIndex].entry1 > price{
+                        openTrades[tradeIndex].isEntry1 = true
+                    }
+
+                    if openTrades[tradeIndex].entry2 > price{
+                        openTrades[tradeIndex].isEntry2 = true
+                    }
+
+                    if openTrades[tradeIndex].entry3 > price{
+                        openTrades[tradeIndex].isEntry3 = true
+                    }
+
+                    if openTrades[tradeIndex].entry4 > price{
+                        openTrades[tradeIndex].isEntry4 = true
+                    }
+
+                    if openTrades[tradeIndex].stopLoss > price{
+                        openTrades[tradeIndex].isStopLoss = true
+                        closedTrades.append(openTrades[tradeIndex])
+                        openTrades.remove(at: tradeIndex)
+                    }
+
+                    if openTrades[tradeIndex].isEntry1 && openTrades[tradeIndex].stopLossProfit > price{
+                        openTrades[tradeIndex].isStopLossProfit = true
+                        closedTrades.append(openTrades[tradeIndex])
+                        openTrades.remove(at: tradeIndex)
+                    }
+
+                    if openTrades[tradeIndex].takeProfit1 < price{
+                        openTrades[tradeIndex].isTakeProfit1 = true
+                    }
+
+                    if openTrades[tradeIndex].takeProfit2 < price{
+                        openTrades[tradeIndex].isTakeProfit2 = true
+                    }
+                    
+                    if didCrossUnder{
+                        openTrades[tradeIndex].takeProfitCross = price
+                        closedTrades.append(openTrades[tradeIndex])
+                        openTrades.remove(at: tradeIndex)
+                    }
+
+                }
+            }
 
         }
-
-        return []
+        
+        print("open trades: \(openTrades.count)")
+        print("closed trades: \(closedTrades.count)")
+        return closedTrades
     }
 
 }
