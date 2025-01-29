@@ -80,17 +80,15 @@ actor BacktestActor{
                 let slProfitDiff = diff / 100 * 58
                 let tpOneDiff = diff / 100 * 38.2
                 
-                //TODO round values to 1 decimal
-
-                let gp = candle1.high - gpDiff
-                let kb = candle1.high - kbDiff
-                let slProfit = candle1.high - slProfitDiff
-                let tp1 = candle1.high - tpOneDiff
+                let gp = ((candle1.high - gpDiff) * 10).rounded() / 10
+                let kb = ((candle1.high - kbDiff) * 10).rounded() / 10
+                let slProfit = ((candle1.high - slProfitDiff) * 10).rounded() / 10
+                let tp1 = ((candle1.high - tpOneDiff) * 10).rounded() / 10
 
                 let limitDiff = (gp - kb) / 3
 
-                let limit2 = gp - limitDiff
-                let limit3 = kb + limitDiff
+                let limit2 = ((gp - limitDiff) * 10).rounded() / 10
+                let limit3 = ((kb + limitDiff) * 10).rounded() / 10
 
                 assert(limit2 - limit3 == limitDiff)
 
@@ -125,3 +123,29 @@ actor BacktestActor{
     }
 
 }
+
+
+
+
+/*
+
+possible simulation logic
+    - create a trade model as soon as fibonacci numbers are clear
+        - properties: entry1, entry2, entry3, entry4, sl, slProfit, tp1, tp2, tpSmaCross, isEntry1Hit, isEntry2Hit, is..., isSlHit, isTp??Hit
+        - update the model accordingly when price moves
+        - if no entry got hit before invalidation, delete it
+        - if position is finished, add to an array
+
+
+---------
+
+logic:
+
+if bullTrend
+    if crossover
+        define low
+        save low candle
+
+
+
+*/
