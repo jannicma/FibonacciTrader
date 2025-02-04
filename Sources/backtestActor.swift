@@ -28,6 +28,7 @@ actor BacktestActor{
 
     private func simulate(with candles: [IndicatorCandle]) -> [Trade]{ 
         // 1. Get high and low for up and down trend
+        // 2. Reset high and low at the right times
 
         var candleHigh: IndicatorCandle?
         var candleLow: IndicatorCandle?
@@ -47,10 +48,18 @@ actor BacktestActor{
 
 
             if isCrossUnder && lastCrossIndex > 0{
+                if isBearTrend{
+                    candleHigh = nil
+                    candleLow = nil
+                }
                 candleHigh = getPivotCandle(candles: candles, indexFrom: lastCrossIndex, indexTo: i, findHigh: true)
             }
 
             if isCrossOver && lastCrossIndex > 0{
+                if isBullTrend{
+                    candleLow = nil
+                    candleHigh = nil
+                }
                 candleLow = getPivotCandle(candles: candles, indexFrom: lastCrossIndex, indexTo: i, findHigh: false)
             }
 
