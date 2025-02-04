@@ -29,6 +29,9 @@ actor BacktestActor{
     private func simulate(with candles: [IndicatorCandle]) -> [Trade]{ 
         // 1. Get high and low for up and down trend
         // 2. Reset high and low at the right times
+        // 3. Calculate GP when the second pivot point is generated
+
+
 
         var candleHigh: IndicatorCandle?
         var candleLow: IndicatorCandle?
@@ -69,13 +72,12 @@ actor BacktestActor{
             }
 
 
-            if isBullTrend{
-
-            }
-
-
-            if isBearTrend{
             
+            if let candleLow, let candleHigh{
+                let candleZero = isBullTrend ? candleHigh.high : candleLow.low
+                let candleOne = isBullTrend ? candleLow.low : candleHigh.high
+
+                let fibs = getFibonacci(zero: candleZero, one: candleOne)
             }
 
 
@@ -84,6 +86,31 @@ actor BacktestActor{
         return []
 
     }
+
+
+
+    private func getFibonacci(zero: Double, one: Double) -> [Double: Double]{
+        var fibSequence = [0: zero,
+                            0.114: 0.0,
+                            0.236: 0.0,
+                            0.382: 0.0,
+                            0.5: 0.0,
+                            0.58: 0.0,
+                            0.618: 0.0,
+                            0.75: 0.0,
+                            0.886: 0.0,
+                            1: one]
+
+        let difference = Double(abs(zero - one))
+
+        for key in fibSequence.keys{
+            let diffFactor = key * difference
+            fibSequence[key] = zero>one ? zero - diffFactor : zero + diffFactor
+        }
+
+        return fibSequence
+    }
+
 
 
     private func getPivotCandle(candles: [IndicatorCandle], indexFrom: Int, indexTo: Int, findHigh: Bool) -> IndicatorCandle?{
