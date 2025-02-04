@@ -31,6 +31,8 @@ actor BacktestActor{
         // 2. Reset high and low at the right times
         // 3. Calculate GP when the second pivot point is generated
         // 4. Create a "activeTrade" with all the trade rules (entry, exit levels)
+        // 5. Update activeTrade
+
 
 
         var candleHigh: IndicatorCandle?
@@ -91,6 +93,62 @@ actor BacktestActor{
                 candleLow = nil
             }
 
+
+            
+            if let activeTrade{
+                let isLongTrade = activeTrade.entry1 > activeTrade.stopLoss
+                let swingExtreme = isLongTrade ? currCandle.low : currCandle.high
+                let swingProfitExtreme = isLongTrade ? currCandle.high : currCandle.low
+
+
+                let entry1Diff = activeTrade.entry1 - swingExtreme
+                if entry1Diff > 0 == isLongTrade{
+                    activeTrade.isEntry1 = true
+                }
+
+                if !activeTrade.isEntry1{
+                    continue
+                }
+
+                let entry2Diff = activeTrade.entry2 - swingExtreme
+                if entry2Diff > 0 == isLongTrade{
+                    activeTrade.isEntry2 = true
+                }
+
+                let entry3Diff = activeTrade.entry3 - swingExtreme
+                if entry3Diff > 0 == isLongEntry{
+                    activeTrade.isEntry3 = true
+                }
+
+                let entry4Diff = activeTrade.entry4 - swingExtreme
+                if entry4Diff > 0 == isLongEntry{
+                    activeTrade.isEntry4 = true
+                }
+
+                let slDiff = activeTrade.stopLoss - swingExtreme
+                if slDiff > 0 == isLongTrade{
+                    activeTrade.isStopLoss = true
+                }
+
+                let tp1Diff = activeTrade.takeProfit1 - swingProfitExtreme
+                if tp1Diff < 0 == isLongTrade{
+                    activeTrade.isTakeProfit1 = true
+                }
+
+                let tp2Diff = activeTrade.takeProfit2 - swingProfitExtreme
+                if tp2Diff < 0 == isLongTrade{
+                    activeTrade.isTakeProfit2 = true
+                }
+
+                let slProfDiff = activeTrade.stopLossProfit - swingExtreme
+                if slProfDiff > 0 == isLongTrade && activeTrade.isTakeProfit1{
+                    activeTrade.isStopLossProfit = true
+                }
+
+                if isLongTrade ? isCrossUnder : isCrossOver{
+                    activeTrade.takeProfitCross = currCandle.close
+                }
+            }
 
         }
 
