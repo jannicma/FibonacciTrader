@@ -1,4 +1,4 @@
-import Foundatio
+import Foundation
 
 /*
     This Actor is the main for the backtesting. it works as its own program
@@ -10,7 +10,7 @@ actor BacktestActor{
         let marketController = MarketController()
         let indicatorCalculator = IndicatorCalculator()
 
-        let candles = await marketController.fetchKline(for: "BTCUSDT", interval: 30, limit: 500)
+        let candles = await marketController.fetchKline(for: "BTCUSDT", interval: 30, limit: 1000)
 
         guard candles.count > 0 else{
             print("error fetching data")
@@ -32,7 +32,7 @@ actor BacktestActor{
         // 3. Calculate GP when the second pivot point is generated
         // 4. Create a "activeTrade" with all the trade rules (entry, exit levels)
         // 5. Update activeTrade
-
+        // 6. finish a trade, add to list, return the list
 
 
         var candleHigh: IndicatorCandle?
@@ -41,6 +41,7 @@ actor BacktestActor{
         var lastCrossIndex = 0
 
         var activeTrade: Trade?
+        var finishedTrades: [Trade] = []
 
         for i in 1..<candles.count{
             let currCandle = candles[i]
@@ -95,64 +96,72 @@ actor BacktestActor{
 
 
             
-            if let activeTrade{
-                let isLongTrade = activeTrade.entry1 > activeTrade.stopLoss
+            if let trade = activeTrade{
+                let isLongTrade = trade.entry1 > trade.stopLoss
                 let swingExtreme = isLongTrade ? currCandle.low : currCandle.high
                 let swingProfitExtreme = isLongTrade ? currCandle.high : currCandle.low
 
 
-                let entry1Diff = activeTrade.entry1 - swingExtreme
-                if entry1Diff > 0 == isLongTrade{
-                    activeTrade.isEntry1 = true
+                let entry1Diff = trade.entry1 - swingExtreme
+                if (entry1Diff > 0) == isLongTrade{
+                    activeTrade!.isEntry1 = true
                 }
 
-                if !activeTrade.isEntry1{
+                if !activeTrade!.isEntry1{
                     continue
                 }
 
-                let entry2Diff = activeTrade.entry2 - swingExtreme
-                if entry2Diff > 0 == isLongTrade{
-                    activeTrade.isEntry2 = true
+                let entry2Diff = trade.entry2 - swingExtreme
+                if (entry2Diff > 0) == isLongTrade{
+                    activeTrade!.isEntry2 = true
                 }
 
-                let entry3Diff = activeTrade.entry3 - swingExtreme
-                if entry3Diff > 0 == isLongEntry{
-                    activeTrade.isEntry3 = true
+                let entry3Diff = trade.entry3 - swingExtreme
+                if (entry3Diff > 0) == isLongTrade{
+                    activeTrade!.isEntry3 = true
                 }
 
-                let entry4Diff = activeTrade.entry4 - swingExtreme
-                if entry4Diff > 0 == isLongEntry{
-                    activeTrade.isEntry4 = true
+                let entry4Diff = trade.entry4 - swingExtreme
+                if (entry4Diff > 0) == isLongTrade{
+                    activeTrade!.isEntry4 = true
                 }
 
-                let slDiff = activeTrade.stopLoss - swingExtreme
-                if slDiff > 0 == isLongTrade{
-                    activeTrade.isStopLoss = true
+                let slDiff = trade.stopLoss - swingExtreme
+                if (slDiff > 0) == isLongTrade{
+                    activeTrade!.isStopLoss = true
+                    finishedTrades.append(activeTrade!)
+                    activeTrade = nil
+                    continue
                 }
 
-                let tp1Diff = activeTrade.takeProfit1 - swingProfitExtreme
-                if tp1Diff < 0 == isLongTrade{
-                    activeTrade.isTakeProfit1 = true
+                let tp1Diff = trade.takeProfit1 - swingProfitExtreme
+                if (tp1Diff < 0) == isLongTrade{
+                    activeTrade!.isTakeProfit1 = true
                 }
 
-                let tp2Diff = activeTrade.takeProfit2 - swingProfitExtreme
-                if tp2Diff < 0 == isLongTrade{
-                    activeTrade.isTakeProfit2 = true
+                let tp2Diff = trade.takeProfit2 - swingProfitExtreme
+                if (tp2Diff < 0) == isLongTrade{
+                    activeTrade!.isTakeProfit2 = true
                 }
 
-                let slProfDiff = activeTrade.stopLossProfit - swingExtreme
-                if slProfDiff > 0 == isLongTrade && activeTrade.isTakeProfit1{
-                    activeTrade.isStopLossProfit = true
+                let slProfDiff = trade.stopLossProfit - swingExtreme
+                if (slProfDiff > 0) == isLongTrade && activeTrade!.isTakeProfit1{
+                    activeTrade!.isStopLossProfit = true
                 }
 
                 if isLongTrade ? isCrossUnder : isCrossOver{
-                    activeTrade.takeProfitCross = currCandle.close
+                    activeTrade!.takeProfitCross = currCandle.close
+                    finishedTrades.append(activeTrade!)
+                    activeTrade = nil
+                    continue
                 }
             }
 
         }
-
-        return []
+        
+        print("Finished Trades count: \(finishedTrades.count)")
+        print(finishedTrades)
+        return finishedTrades
 
     }
 
