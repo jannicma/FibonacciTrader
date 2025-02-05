@@ -1,4 +1,6 @@
 struct Trade: Decodable{
+    var timestamp: Int?             // timestamp in ms 
+
     let entry1: Double              // entry at .618
     let entry2: Double              // entry 1/3 between .618 and .75
     let entry3: Double              // entry 2/3 between .618 and .75
@@ -22,4 +24,5 @@ struct Trade: Decodable{
     var isTakeProfit1: Bool         // is TP hit?
     var isTakeProfit2: Bool
     
+    let compareRsi: Double          // RSI of candleLow/candleHigh
 }

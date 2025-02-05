@@ -33,6 +33,7 @@ actor BacktestActor{
         // 4. Create a "activeTrade" with all the trade rules (entry, exit levels)
         // 5. Update activeTrade
         // 6. finish a trade, add to list, return the list
+        // 7. Add RSI to trade logic
 
 
         var candleHigh: IndicatorCandle?
@@ -81,15 +82,18 @@ actor BacktestActor{
             if let low = candleLow, let high = candleHigh{
                 let candleZero = isBullTrend ? high.high : low.low
                 let candleOne = isBullTrend ? low.low : high.high
+                let compareRsi = isBullTrend ? low.rsi : high.rsi
 
                 let fibs = getFibonacci(zero: candleZero, one: candleOne)
 
-                activeTrade = Trade(entry1: fibs[0.618]!, entry2: fibs[0.674]!, entry3: fibs[0.73]!, entry4: fibs[0.786]!,
+                activeTrade = Trade(timestamp: nil,
+                                    entry1: fibs[0.618]!, entry2: fibs[0.674]!, entry3: fibs[0.73]!, entry4: fibs[0.786]!,
                                     isEntry1: false, isEntry2: false, isEntry3: false, isEntry4: false,
                                     stopLoss: fibs[1]!, isStopLoss: false,
                                     stopLossProfit: fibs[0.58]!, isStopLossProfit: false,
                                     takeProfit1: fibs[0.382]!, takeProfit2: fibs[0]!, takeProfitCross: nil,
-                                    isTakeProfit1: false, isTakeProfit2: false)
+                                    isTakeProfit1: false, isTakeProfit2: false, 
+                                    compareRsi: compareRsi)
                 candleHigh = nil
                 candleLow = nil
             }
@@ -100,34 +104,42 @@ actor BacktestActor{
                 let isLongTrade = trade.entry1 > trade.stopLoss
                 let swingExtreme = isLongTrade ? currCandle.low : currCandle.high
                 let swingProfitExtreme = isLongTrade ? currCandle.high : currCandle.low
+                let didDiv = isLongTrade ? trade.compareRsi > currCandle.rsi : trade.compareRsi < currCandle.rsi
 
 
                 let entry1Diff = trade.entry1 - swingExtreme
-                if (entry1Diff > 0) == isLongTrade{
+                let entry1Open = trade.entry1 - currCandle.open
+                if (entry1Diff > 0) == isLongTrade && (entry1Open < 0) == isLongTrade && didDiv{
                     activeTrade!.isEntry1 = true
-                }
-
-                if !activeTrade!.isEntry1{
-                    continue
+                    activeTrade!.timestamp = currCandle.time
                 }
 
                 let entry2Diff = trade.entry2 - swingExtreme
-                if (entry2Diff > 0) == isLongTrade{
+                let entry2Open = trade.entry2 - currCandle.open
+                if (entry2Diff > 0) == isLongTrade && (entry2Open < 0) == isLongTrade && didDiv{
                     activeTrade!.isEntry2 = true
                 }
 
                 let entry3Diff = trade.entry3 - swingExtreme
-                if (entry3Diff > 0) == isLongTrade{
+                let entry3Open = trade.entry3 - currCandle.open
+                if (entry3Diff > 0) == isLongTrade && (entry3Open < 0) == isLongTrade && didDiv{
                     activeTrade!.isEntry3 = true
                 }
 
                 let entry4Diff = trade.entry4 - swingExtreme
-                if (entry4Diff > 0) == isLongTrade{
+                let entry4Open = trade.entry4 - currCandle.open
+                if (entry4Diff > 0) == isLongTrade && (entry4Open < 0) == isLongTrade && didDiv{
                     activeTrade!.isEntry4 = true
                 }
 
+                if !(activeTrade!.isEntry1 || activeTrade!.isEntry2 || activeTrade!.isEntry3 || activeTrade!.isEntry4){
+                    continue
+                }
+
+
                 let slDiff = trade.stopLoss - swingExtreme
-                if (slDiff > 0) == isLongTrade{
+                let slOpen = trade.stopLoss - currCandle.open
+                if (slDiff > 0) == isLongTrade && (slOpen < 0) == isLongTrade{
                     activeTrade!.isStopLoss = true
                     finishedTrades.append(activeTrade!)
                     activeTrade = nil
@@ -135,17 +147,20 @@ actor BacktestActor{
                 }
 
                 let tp1Diff = trade.takeProfit1 - swingProfitExtreme
-                if (tp1Diff < 0) == isLongTrade{
+                let tp1Open = trade.takeProfit1 - currCandle.open
+                if (tp1Diff < 0) == isLongTrade && (tp1Open > 0) == isLongTrade{
                     activeTrade!.isTakeProfit1 = true
                 }
 
                 let tp2Diff = trade.takeProfit2 - swingProfitExtreme
-                if (tp2Diff < 0) == isLongTrade{
+                let tp2Open = trade.takeProfit2 - currCandle.open
+                if (tp2Diff < 0) == isLongTrade && (tp2Open > 0) == isLongTrade{
                     activeTrade!.isTakeProfit2 = true
                 }
 
                 let slProfDiff = trade.stopLossProfit - swingExtreme
-                if (slProfDiff > 0) == isLongTrade && activeTrade!.isTakeProfit1{
+                let slProfitOpen = trade.stopLossProfit - currCandle.open
+                if (slProfDiff > 0) == isLongTrade && (slProfitOpen < 0) == isLongTrade && activeTrade!.isTakeProfit1{
                     activeTrade!.isStopLossProfit = true
                 }
 
