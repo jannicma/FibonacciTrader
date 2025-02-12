@@ -111,7 +111,6 @@ actor BacktestActor{
                 let entry1Open = trade.entry1 - currCandle.open
                 if (entry1Diff > 0) == isLongTrade && (entry1Open < 0) == isLongTrade && didDiv{
                     activeTrade!.isEntry1 = true
-                    activeTrade!.timestamp = currCandle.time
                 }
 
                 let entry2Diff = trade.entry2 - swingExtreme
@@ -132,11 +131,39 @@ actor BacktestActor{
                     activeTrade!.isEntry4 = true
                 }
 
-                if !(activeTrade!.isEntry1 || activeTrade!.isEntry2 || activeTrade!.isEntry3 || activeTrade!.isEntry4){
+
+                let hasEntry = (activeTrade!.isEntry1 || activeTrade!.isEntry2 || activeTrade!.isEntry3 || activeTrade!.isEntry4)
+
+                if hasEntry && activeTrade!.timestamp == nil{
+                    activeTrade!.timestamp = currCandle.time
+                }
+
+
+                if isLongTrade ? isCrossUnder : isCrossOver{
+                    if hasEntry{
+                        if isLongTrade ? trade.stopLoss > currCandle.close : trade.stopLoss < currCandle.close{
+                            activeTrade!.isStopLoss = true
+                        }
+                        else if trade.isTakeProfit1 && (isLongTrade ? trade.stopLossProfit > currCandle.close : trade.stopLossProfit < currCandle.close){
+                            activeTrade!.isStopLossProfit = true
+                        }
+                        else{
+                            activeTrade!.takeProfitCross = currCandle.close
+                        }
+
+                        finishedTrades.append(activeTrade!)
+                    }
+                    activeTrade = nil
                     continue
                 }
 
 
+                if !hasEntry{ 
+                    continue
+                }
+
+                
+                
                 let slDiff = trade.stopLoss - swingExtreme
                 let slOpen = trade.stopLoss - currCandle.open
                 if (slDiff > 0) == isLongTrade && (slOpen < 0) == isLongTrade{
@@ -164,12 +191,6 @@ actor BacktestActor{
                     activeTrade!.isStopLossProfit = true
                 }
 
-                if isLongTrade ? isCrossUnder : isCrossOver{
-                    activeTrade!.takeProfitCross = currCandle.close
-                    finishedTrades.append(activeTrade!)
-                    activeTrade = nil
-                    continue
-                }
             }
 
         }
