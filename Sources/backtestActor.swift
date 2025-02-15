@@ -9,8 +9,20 @@ actor BacktestActor{
     public func startBacktest() async{
         let marketController = MarketController()
         let indicatorCalculator = IndicatorCalculator()
+        let csvController = CsvController()
 
-        let candles = await marketController.fetchKline(for: "BTCUSDT", interval: 30, limit: 1000)
+        let useApi = false
+        var candles: [Candle] = []
+        if useApi{
+            candles = await marketController.fetchKline(for: "BTCUSDT", interval: 30, limit: 1000)
+        }
+        else{
+            candles = csvController.getCandlesFromCsv(csv: "/Users/jannicmarcon/Downloads/testCandles.csv")
+        }
+
+        print(candles[0].time)
+        print(candles[1].time)
+        print(candles[2].time)
 
         guard candles.count > 0 else{
             print("error fetching data")
@@ -27,15 +39,6 @@ actor BacktestActor{
 
 
     private func simulate(with candles: [IndicatorCandle]) -> [Trade]{ 
-        // 1. Get high and low for up and down trend
-        // 2. Reset high and low at the right times
-        // 3. Calculate GP when the second pivot point is generated
-        // 4. Create a "activeTrade" with all the trade rules (entry, exit levels)
-        // 5. Update activeTrade
-        // 6. finish a trade, add to list, return the list
-        // 7. Add RSI to trade logic
-
-
         var candleHigh: IndicatorCandle?
         var candleLow: IndicatorCandle?
 
