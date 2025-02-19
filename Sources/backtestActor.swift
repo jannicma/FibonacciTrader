@@ -7,36 +7,41 @@ import Foundation
 actor BacktestActor{
 
     public func startBacktest() async{
-        let marketController = MarketController()
+        // let marketController = MarketController()
         let indicatorCalculator = IndicatorCalculator()
         let csvController = CsvController()
+        let evaluationController = EvaluationController()
 
-        let useApi = false
-        var candles: [Candle] = []
-        if useApi{
-            candles = await marketController.fetchKline(for: "BTCUSDT", interval: 30, limit: 1000)
+    //    let useApi = false
+        let dirPath = "/Users/jannicmarcon/Documents/Other/"
+        let fileManager = FileManager.default
+        var csvFiles: [String] = []
+        do{
+            let files = try fileManager.contentsOfDirectory(atPath: dirPath)
+            csvFiles = files.filter{$0.hasSuffix(".csv")}
         }
-        else{
-            candles = csvController.getCandlesFromCsv(csv: "/Users/jannicmarcon/Downloads/testCandles.csv")
-        }
-
-        print(candles[0].time)
-        print(candles[1].time)
-        print(candles[2].time)
-
-        guard candles.count > 0 else{
-            print("error fetching data")
-            return
+        catch{
+            print(error)
         }
 
-        let indicatorCandles = indicatorCalculator.convertCandleToIndicatorCandle(candles: candles)
-        print("count of candles fetched: \(candles.count)")
-        print("count of indicator candles: \(indicatorCandles.count)")
 
-        let simulatedTrades = simulate(with: indicatorCandles)
-        
+        for csvFile in csvFiles{
+            let candles = csvController.getCandlesFromCsv(csv: csvFile)
+
+            guard candles.count > 0 else{
+                print("error fetching data")
+                continue
+            }
+
+            let indicatorCandles = indicatorCalculator.convertCandleToIndicatorCandle(candles: candles)
+
+            let simulatedTrades = simulate(with: indicatorCandles)
+
+            evaluationController.evaluate(trades: simulatedTrades)
+        }
     }
 
+    
 
     private func simulate(with candles: [IndicatorCandle]) -> [Trade]{ 
         var candleHigh: IndicatorCandle?
