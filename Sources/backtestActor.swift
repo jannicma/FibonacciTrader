@@ -12,8 +12,7 @@ actor BacktestActor{
         let csvController = CsvController()
         let evaluationController = EvaluationController()
 
-    //    let useApi = false
-        let dirPath = "/Users/jannicmarcon/Documents/Other/"
+        let dirPath = "/Users/jannicmarcon/Documents/ChartCsv/"
         let fileManager = FileManager.default
         var csvFiles: [String] = []
         do{
@@ -21,12 +20,14 @@ actor BacktestActor{
             csvFiles = files.filter{$0.hasSuffix(".csv")}
         }
         catch{
-            print(error)
+            print("Error getting Csv files. Error: \(error)")
         }
 
 
         for csvFile in csvFiles{
-            let candles = csvController.getCandlesFromCsv(csv: csvFile)
+            let csvPath = dirPath + csvFile
+            let candles = csvController.getCandlesFromCsv(csv: csvPath)
+            
 
             guard candles.count > 0 else{
                 print("error fetching data")
@@ -37,7 +38,7 @@ actor BacktestActor{
 
             let simulatedTrades = simulate(with: indicatorCandles)
 
-            evaluationController.evaluate(trades: simulatedTrades)
+            evaluationController.evaluate(trades: simulatedTrades, name: csvFile)
         }
     }
 
@@ -202,8 +203,6 @@ actor BacktestActor{
 
         }
         
-        print("Finished Trades count: \(finishedTrades.count)")
-        dump(finishedTrades)
         return finishedTrades
 
     }

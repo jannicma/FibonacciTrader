@@ -9,14 +9,14 @@ class CsvController{
 
             for line in lines{
                 let fields = line.components(separatedBy: ",")
-                if fields.count == 6 && fields[0] != "time"{
+                if fields.count >= 5 && fields[0] != "time"{
                     let candle = Candle(
                         time: Int(fields[0])!,
                         open: Double(fields[1])!,
                         high: Double(fields[2])!,
                         low: Double(fields[3])!,
                         close: Double(fields[4])!,
-                        volume: Double(fields[5])!,
+                        volume: 0.0,
                         turnover: 0.0
                     )
                     
@@ -25,7 +25,7 @@ class CsvController{
             }
         }
         catch{
-            print("Error reading CSV file")
+            print("Error reading CSV file with name \(fileName). Error: \(error)")
         }
 
         return candles
