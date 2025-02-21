@@ -18,6 +18,7 @@ actor BacktestActor{
         do{
             let files = try fileManager.contentsOfDirectory(atPath: dirPath)
             csvFiles = files.filter{$0.hasSuffix(".csv")}
+            csvFiles = csvFiles.sorted()
         }
         catch{
             print("Error getting Csv files. Error: \(error)")
@@ -28,6 +29,7 @@ actor BacktestActor{
             let csvPath = dirPath + csvFile
             let candles = csvController.getCandlesFromCsv(csv: csvPath)
             
+            print(csvFile)
 
             guard candles.count > 0 else{
                 print("error fetching data")
@@ -38,7 +40,7 @@ actor BacktestActor{
 
             let simulatedTrades = simulate(with: indicatorCandles)
 
-            evaluationController.evaluate(trades: simulatedTrades, name: csvFile)
+            evaluationController.evaluate(trades: simulatedTrades, name: csvFile, filePath: "\(dirPath)evaluation.txt")
         }
     }
 

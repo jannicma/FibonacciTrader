@@ -9,9 +9,9 @@ class EvaluationController{
             "tp1>tp2>tpCross"
     ]
 
-    public func evaluate(trades: [Trade], name: String = ""){
+    public func evaluate(trades: [Trade], name: String = "", filePath: String = ""){
         let evaluation = calculateEvaluation(for: trades)
-        printEvaluation(evaluations: evaluation, totalTrades: trades.count, name: name)
+        printEvaluation(evaluations: evaluation, totalTrades: trades.count, name: name, file: filePath)
     }
 
     private func calculateEvaluation(for trades: [Trade]) -> [String: Int]{
@@ -58,20 +58,40 @@ class EvaluationController{
     }
 
 
-    private func printEvaluation(evaluations: [String: Int], totalTrades: Int, name: String){
-
-        print("=== Trade Outcomes for \(name) ===")
-        print("Total Trades: \(totalTrades)")
-
+    private func printEvaluation(evaluations: [String: Int], totalTrades: Int, name: String, file: String){
+        var output = "=== Trade Outcomes for \(name) ===\n"
+        output += "Total Trades: \(totalTrades)\n"
+    
         for num in possibleEntryCounts.reversed() {
-            print("\nFor \(num) entries hit:")
+            output += "\nFor \(num) entries hit:\n"
             for closingType in possibleClosingTypes {
                 let key = "\(num)_entries_\(closingType)"
                 let count = evaluations[key] ?? 0
                 let percentage = totalTrades > 0 ? Double(count) / Double(totalTrades) * 100 : 0.0
-                print("- \(closingType): \(count) (\(String(format: "%.2f", percentage))%)")
+                output += "- \(closingType): \(count) (\(String(format: "%.2f", percentage))%)\n"
             }
         }
-        print("=================================\n\n")
+        output += "=================================\n\n"
+    
+        // Convert output string to data
+        guard let data = output.data(using: .utf8) else {
+            print("error on encoding data")
+            return
+        }
+    
+        // Check if file exists and append or create
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: file) {
+            // File exists, append to it
+            do {
+                let fileHandle = try FileHandle(forWritingTo: URL(fileURLWithPath: file))
+                fileHandle.seekToEndOfFile() // Move to the end of the file
+                fileHandle.write(data)       // Append the data
+                fileHandle.closeFile()
+            } catch {
+                print("error writing file!")    
+            }
+        } 
+
     }
 }

@@ -20,7 +20,7 @@ struct Main{
             if let input = readLine(){
                 switch input{
                     case "1": 
-                        print("Backtest")
+                        print()
                         await backtestActor.startBacktest()
                     case "2":
                         print("start live")
