@@ -22,10 +22,15 @@ class DatabaseManager{
         config.port = 5432
         config.database = "fibonacci_trader"
         config.user = "postgres"
-        config.credential = .cleartextPassword(password: ProcessInfo.processInfo.environment["postgres_password"] ?? "pw")
-
+        config.ssl = false
+        //config.credential = .cleartextPassword(password: ProcessInfo.processInfo.environment["postgres_password"] ?? "pw")
+        
+        print("before connection try")
+        dump(config)
         let newConnection = try Connection(configuration: config)
+        print("after connection try")
         return newConnection
     }
 
 }
+

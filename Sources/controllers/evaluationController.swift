@@ -9,9 +9,11 @@ class EvaluationController{
             "tp1>tp2>tpCross"
     ]
 
+    let evaluationDataService = EvaluationDataService()
+
     public func evaluate(trades: [Trade], name: String = "", filePath: String = ""){
         let evaluation = calculateEvaluation(for: trades)
-        printEvaluation(evaluations: evaluation, totalTrades: trades.count, name: name, file: filePath)
+        saveEvaluations(evaluations: evaluation, totalTrades: trades.count, name: name, file: filePath)
     }
 
     private func calculateEvaluation(for trades: [Trade]) -> [String: Int]{
@@ -58,40 +60,17 @@ class EvaluationController{
     }
 
 
-    private func printEvaluation(evaluations: [String: Int], totalTrades: Int, name: String, file: String){
-        var output = "=== Trade Outcomes for \(name) ===\n"
-        output += "Total Trades: \(totalTrades)\n"
-    
-        for num in possibleEntryCounts.reversed() {
-            output += "\nFor \(num) entries hit:\n"
-            for closingType in possibleClosingTypes {
-                let key = "\(num)_entries_\(closingType)"
-                let count = evaluations[key] ?? 0
-                let percentage = totalTrades > 0 ? Double(count) / Double(totalTrades) * 100 : 0.0
-                output += "- \(closingType): \(count) (\(String(format: "%.2f", percentage))%)\n"
-            }
-        }
-        output += "=================================\n\n"
-    
-        // Convert output string to data
-        guard let data = output.data(using: .utf8) else {
-            print("error on encoding data")
-            return
-        }
-    
-        // Check if file exists and append or create
-        let fileManager = FileManager.default
-        if fileManager.fileExists(atPath: file) {
-            // File exists, append to it
-            do {
-                let fileHandle = try FileHandle(forWritingTo: URL(fileURLWithPath: file))
-                fileHandle.seekToEndOfFile() // Move to the end of the file
-                fileHandle.write(data)       // Append the data
-                fileHandle.closeFile()
-            } catch {
-                print("error writing file!")    
-            }
-        } 
+    private func saveEvaluations(evaluations: [String: Int], totalTrades: Int, name: String, file: String){
+        let splittedName = name.split(separator: ",")
+        let asset = splittedName[0].trimmingCharacters(in: .whitespacesAndNewlines)
+        let timeframe = splittedName[1].split(separator: ".")[0].trimmingCharacters(in: .whitespacesAndNewlines)
 
+        let note = """
+            Version 0
+            GP with RSI Divergence
+            Options: 
+                \(possibleClosingTypes)
+            """
+        evaluationDataService.saveEvaluation(evaluations: evaluations, totalTrades: totalTrades, assetName: asset, timeframe: timeframe, note: note)
     }
 }
