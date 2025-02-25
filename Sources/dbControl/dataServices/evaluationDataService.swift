@@ -20,6 +20,8 @@ class EvaluationDataService{
                 throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Database Connection is NIL"])
             }
 
+            if try checkNoteExists(connection: connection, assetName: assetName, timeframe: timeframe, note: note) { return }
+            
             let statement = try connection.prepareStatement(text: query)
             defer { statement.close() }
 
@@ -39,6 +41,22 @@ class EvaluationDataService{
         }
     }
 
+    private func checkNoteExists(connection: Connection, assetName: String, timeframe: String, note: String) throws -> Bool {
+        let noteCheckQuery = "SELECT COUNT(*) FROM backtest_runs WHERE asset_name = $1 AND timeframe = $2 AND algo_note = $3 ;"
+
+        let noteCheckStatement = try connection.prepareStatement(text: noteCheckQuery)
+        defer { noteCheckStatement.close() }
+
+        let noteCheckCursor = try noteCheckStatement.execute(parameterValues: [assetName, timeframe, note])
+        defer { noteCheckCursor.close() }
+
+        if let row = noteCheckCursor.next() {
+            let count = try row.get().columns[0].int()
+            return count > 0
+        }
+        
+        throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Count of backtest_runs with same note did not return anything"])
+    }
 
     private func saveOutcomes(runId: Int, evaluations: [String: Int]) throws {
         guard let connection = dbManager.connection else {

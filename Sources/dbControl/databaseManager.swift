@@ -25,10 +25,7 @@ class DatabaseManager{
         config.ssl = false
         //config.credential = .cleartextPassword(password: ProcessInfo.processInfo.environment["postgres_password"] ?? "pw")
         
-        print("before connection try")
-        dump(config)
         let newConnection = try Connection(configuration: config)
-        print("after connection try")
         return newConnection
     }
 
