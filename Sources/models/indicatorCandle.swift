@@ -10,4 +10,5 @@ struct IndicatorCandle: Decodable{
     let smaLong: Double
     let smaShort: Double
     let rsi: Double
+    let adx: Double
 }

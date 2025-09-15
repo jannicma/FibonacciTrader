@@ -74,6 +74,10 @@ class IndicatorCalculator{
             let rsi = lossRma == 0.0 ? 100.0 : gainRma == 0.0 ? 0.0 : 100 - (100 / (1 + rs))
 
 
+
+            //calc ADX
+            var adx = 0.0
+    
             //create indicatorCandle
             let newIndicatorCandle = IndicatorCandle(time: candles[i].time, 
                                                     open: candles[i].open, 
@@ -85,7 +89,8 @@ class IndicatorCalculator{
                                                     smaTrend: trendSma, 
                                                     smaLong: longSma, 
                                                     smaShort: shortSma, 
-                                                    rsi: rsi)
+                                                    rsi: rsi,
+                                                    adx: adx)
 
             indicatorCandles.append(newIndicatorCandle)
 
